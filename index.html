@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scaler Room Booking</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      background: #f4f4f4;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    img {
+      display: block;
+      margin: 0 auto 20px;
+      width: 150px;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0057ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #msg {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+    #customSessionInputs {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://assets.scaler.com/images/scaler-logo.svg" alt="Scaler Logo">
+  <h2>Room Booking</h2>
+
+  <label>Date (e.g. Jun 22)</label>
+  <input type="text" id="dateStr" />
+
+  <label>Classroom</label>
+  <select id="className">
+    <option>Class A</option>
+    <option>Class B</option>
+    <option>Class C</option>
+  </select>
+
+  <label>Start Time</label>
+  <select id="startTime"></select>
+
+  <label>End Time</label>
+  <select id="endTime"></select>
+
+  <label>Your Name</label>
+  <input type="text" id="bookedBy" />
+
+  <label>Reason</label>
+  <input type="text" id="reason" />
+
+  <label>Session Type</label>
+  <select id="sessionType" onchange="toggleCustomType()">
+    <option value="lecture">Lecture</option>
+    <option value="lab">Lab</option>
+    <option value="mentor">Mentor</option>
+    <option value="break">Break</option>
+    <option value="custom">Custom</option>
+  </select>
+
+  <div id="customSessionInputs">
+    <label>Custom Session Name</label>
+    <input type="text" id="customSessionName" />
+    <label>Custom Color</label>
+    <input type="color" id="customColor" value="#ead1dc" />
+  </div>
+
+  <button onclick="submitBooking()">Submit</button>
+  <div id="msg"></div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/PASTE-YOUR-WEB-APP-URL-HERE/exec";
+
+    const timeSlots = [
+      "9:30 - 9:45 AM","9:45 - 10:00 AM","10:00 - 10:15 AM","10:15 - 10:30 AM",
+      "10:30 - 10:45 AM","10:45 - 11:00 AM","11:00 - 11:15 AM","11:15 - 11:30 AM",
+      "11:30 - 11:45 AM","11:45 - 12:00 PM","12:00 - 12:15 PM","12:15 - 12:30 PM",
+      "12:30 - 12:45 PM","12:45 - 1:00 PM","1:00 - 1:15 PM","1:15 - 1:30 PM",
+      "1:30 - 1:45 PM","1:45 - 2:00 PM","2:00 - 2:15 PM","2:15 - 2:30 PM",
+      "2:30 - 2:45 PM","2:45 - 3:00 PM","3:00 - 3:15 PM","3:15 - 3:30 PM",
+      "3:30 - 3:45 PM","3:45 - 4:00 PM","4:00 - 4:15 PM","4:15 - 4:30 PM",
+      "4:30 - 4:45 PM","4:45 - 5:00 PM","5:00 - 5:15 PM","5:15 - 5:30 PM"
+    ];
+
+    window.onload = () => {
+      const startTime = document.getElementById("startTime");
+      const endTime = document.getElementById("endTime");
+      timeSlots.forEach(t => {
+        startTime.add(new Option(t, t));
+        endTime.add(new Option(t, t));
+      });
+    };
+
+    function toggleCustomType() {
+      const type = document.getElementById("sessionType").value;
+      document.getElementById("customSessionInputs").style.display = type === "custom" ? "block" : "none";
+    }
+
+    function submitBooking() {
+      const type = document.getElementById("sessionType").value;
+      const data = {
+        dateStr: document.getElementById("dateStr").value,
+        className: document.getElementById("className").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+        bookedBy: document.getElementById("bookedBy").value,
+        reason: document.getElementById("reason").value,
+        sessionType: type === "custom"
+          ? document.getElementById("customSessionName").value || "custom"
+          : type,
+        customColor: type === "custom"
+          ? document.getElementById("customColor").value
+          : null
+      };
+
+      document.getElementById("msg").innerText = "⏳ Booking...";
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.json())
+      .then(response => {
+        document.getElementById("msg").innerText = response.message;
+      })
+      .catch(err => {
+        document.getElementById("msg").innerText = "❌ Error submitting booking.";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
